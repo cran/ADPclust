@@ -1,9 +1,15 @@
 ##' Calculate the AMISE bandwidth from either a data frame, or from p and n.
 ##'
+##' IMPORTANT NOTE: The standard deviation of each variable is omitted in the formula here. For 
+##' computational consideration each dimension of the data is standardized before applying
+##' the bandwidth. Two approaches are mathematically equivalent.
+##'
 ##' @title AMISE bandwidth
+##' 
+##' @export
+##' 
 ##' @param x the number of variables (if y is missing), or a data frame or a matrix (if y is not missing).
 ##' @param y the number of observations. If y is missing, x should be the data matrix.
-##' @export
 ##' @return AMISE bandwidth.
 AMISE <- function(x, y = NULL){
     if(is.null(y)){

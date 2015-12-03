@@ -62,8 +62,9 @@ plot.adpclust <- function(x,
                col = cols, pch = 19, cex = 1.1)
         if(pars$centroids == "auto"){
             if(length(pars$f.cut) > 0){
-                abline(v = f.range[1] + pars$f.cut * 
-                           (f.range[2] - f.range[1]), col = "red", lty = 2)
+                ## abline(v = f.range[1] + pars$f.cut * 
+                ##            (f.range[2] - f.range[1]), col = "red", lty = 2)
+                abline(v = quantile(x$f, probs = pars$f.cut), col = "red", lty = 2)
             }else{
                 segments(f.range[1], delta.range[2],
                          f.range[2], delta.range[1], col = "red", lty = 2)

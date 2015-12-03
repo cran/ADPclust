@@ -137,7 +137,7 @@ findClusterAuto <- function(x,
         attr(best.score, "f.cut") <- f.cut[attr(unqCenters[[best]], "f.cut.id")]
         attr(best.score, "nclust") <- nclust[[clustID]]
         h.score <- data.frame(h = h[sapply(unqCenters, function(x) attr(x, "h"))], scores = scores)
-        hs.scores <- group_by(h.score, h) %>% summarize(score = max(scores))
+        hs.scores <- group_by(h.score, h) %>% dplyr::summarize(score = max(scores))
         if(verbose) cat("Done.\n")
         return(list(score = best.score,
                     cluster = ress[[best]]$clusters,

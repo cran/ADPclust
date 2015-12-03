@@ -12,7 +12,7 @@
 #'
 #' @param fdelta character string that specifies the method to estimate densities at each data point. Default is "mnorm" stands for multivariate Gaussian density estimation. Other options include
 #' @param verbose if TRUE progress will be displayed.#'   
-#' @return an r object with class "rd". If length(h) = 1 then "rd" is a list of 
+#' @return an R object with class "rd". If length(h) = 1 then "rd" is a list of 
 #' the following items:
 #' \itemize{
 #' \item f: vector of f's
@@ -21,7 +21,7 @@
 #' \item distm: distance matrix calculated from data (Euclidean distance))
 #' \item dc: bandwith dc.
 #' }
-#' If h == NULL, than the function returns a list of length 15, where each 
+#' If h == NULL, then the function returns a list of length 15, where each 
 #' item is a list corresponding to one h value. 
 #' 
 #' @examples
@@ -37,7 +37,7 @@ findFd <- function(dat, h = NULL,
     n <- nrow(dat)
     p <- ncol(dat)
 
-    ## distance matrix from standarized data.
+    ## Calcuate the distance matrix from standarized data.
     if(verbose) cat("Calculating distm. ")
     if(fdelta == "mnorm"){
         ## distm.std <- as.matrix(dist(scale(dat, center = FALSE, scale = TRUE),
@@ -107,7 +107,7 @@ findFd <- function(dat, h = NULL,
     }
 
     ##--------------------------
-    ## Main 
+    ## Main function
     ##--------------------------
     if(is.null(h) | length(h) > 1){
         if(is.null(h)){
