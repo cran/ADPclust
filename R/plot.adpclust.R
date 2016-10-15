@@ -1,8 +1,14 @@
-##' Depends on the settings of adpclust, draw figures showing silhouette vs. number of clusters, f vs. delta with selected centroids, and original data (projected to the first two principal components if dim > 2) colored by cluster assignments. 
+##' @importFrom graphics abline axis par plot text points segments 
+NULL
+##' @importFrom stats complete.cases
+NULL
+
+##' Plot the f vs. delta plot with selected centroids.
 ##'
 ##' @title Visualize the result of adpclust()
 ##' @param x an object of class "adpclust". Result of adpclust().
 ##' @param cols vector of colors used to distinguish different clusters. Recycled if necessary.
+##' @param to.plot string vector that indicate which plot(s) to show. The two options are 'cluster.sil' (nclust vs. silhouette) and 'fd' (f vs. delta).
 ##' @param ... Not used.
 ##' @return NULL
 ##'
@@ -14,91 +20,68 @@
 ##' ## Automatically select cluster centroids
 ##' ans <- adpclust(clust3, centroids = "auto")
 ##' plot(ans)
+##' plot(ans, to.plot = "fd")
+##' plot(ans, to.plot = "cluster.sil")
+##' plot(ans, to.plot = c("cluster.sil", "fd")) #Default
+
 
 plot.adpclust <- function(x,
                           cols = "default",
+                          to.plot = c("cluster.sil", "fd"),
                           ...)
 {
+    nclusters <- sils <- NULL # Null out to remove "no visible binding for global variable" note from R check.
+    if(!inherits(x, 'adpclust')) stop('arg x must inherit adpclust. Got ', class(x))
     if(cols == "default") cols = defCol()
-    pars <- x$testPars
-    ## if number of colors is not large enough, recycle
-    nclust <- length(x$centers)
-    if((temp <- ceiling(nclust / length(cols))) > 1)
-        cols <- rep(cols, temp)[1:nclust]
-    sil.vs.nclust <- score.vs.h <- FALSE
-    f.vs.delta <- clust.res <- TRUE
-    if(pars$centroids == "auto"){
-        if(length(pars$nclusts) > 1)
-            sil.vs.nclust <- TRUE
-        else{
-            if(length(pars$hs) > 1)
-                score.vs.h <- TRUE
-            else{}
+    if(!all(to.plot %in% c("cluster.sil", "fd"))) stop('to.plot must be "cluster.sil" and/or "fd".')
+    
+    # Recycle colors 
+    if((temp <- ceiling(x$nclust / length(cols))) > 1)
+        cols <- rep(cols, temp)[1:x$nclust]
+    
+    f <- x[['f']]
+    delta <- x[['delta']]
+    centers <- x[['centers']]
+    
+    par(mfrow = c(1, length(unique(to.plot))))
+    ##--------------------
+    ## nclust vs. silouette
+    ##--------------------
+    if("cluster.sil" %in% to.plot){
+        tried <- data.frame(nclusters = NA, sils = NA)
+        for(i in 1:length(x$tested)){
+            tried[i, 'nclusters'] <- x$tested[[i]][['nclust']]
+            tried[i, 'sils'] <- x$tested[[i]][['sil']]
         }
-    }else{}
-
-    par(mfrow = c(1, 2 + sil.vs.nclust + score.vs.h))
-
-    ##--------------------
-    ## nclust vs. silhouette
-    ##--------------------    
-    if(sil.vs.nclust){
-        plot(pars$nclusts, pars$nclustScores, type = "b", xlab = "number of clusters",
+        tried <- tried[complete.cases(tried), ]
+        tried <- dplyr::group_by(tried, nclusters)
+        tried <- dplyr::summarize(tried, best.sil = max(sils))
+        plot(tried, type = "b", xlab = "number of clusters",
              ylab = "silhouette", xaxt = "n", 
-             main = "#clust vs silouette \n choosing nclust")
-        abline(v = nclust, col = "red", lty = 2)
-        axis(1, at = pars$nclusts, labels = pars$nclusts)
+             main = "# cluster vs silhouette")
+        abline(v = x$nclust, col = "red", lty = 2)
+        axis(1, at = tried$nclusters, labels = tried$nclusters)            
     }
-
+    
     ##--------------------
-    ## f vs delta (best one)
+    ## f vs delta
     ##--------------------
-    if(f.vs.delta){ ## 
-        plot(x$f, x$delta, xlab = "f(x)", ylab = "delta(x)", 
+    if("fd" %in% to.plot){
+        plot(f, delta, xlab = "f(x)", ylab = "delta(x)", 
              main = "f(x) vs delta(x) \n chosen centers")
-        f.range <- range(x$f)
-        delta.range <- range(x$delta)
-        points(x$f[x$centers], x$delta[x$centers], 
-               col = cols, pch = 19, cex = 1.1)
-        if(pars$centroids == "auto"){
-            if(length(pars$f.cut) > 0){
-                ## abline(v = f.range[1] + pars$f.cut * 
-                ##            (f.range[2] - f.range[1]), col = "red", lty = 2)
-                abline(v = quantile(x$f, probs = pars$f.cut), col = "red", lty = 2)
+        f.range <- range(f)
+        delta.range <- range(delta)
+        points(f[centers], delta[centers], 
+               col = cols, pch = 19, cex = 1.2)
+        text(f[centers], delta[centers], labels = centers, cex = 0.6, pos = 1)
+        if(x[['selection.type']] == 'auto'){
+            if(length(attr(centers, 'f.cut')) > 0){
+                abline(v = attr(centers, 'f.cut.value'), col = "red", lty = 2)
             }else{
                 segments(f.range[1], delta.range[2],
                          f.range[2], delta.range[1], col = "red", lty = 2)
             }
-        }
-        text(x$f[x$center], x$delta[x$center], labels = x$center, cex = 0.6, pos = 1)
-
+        }        
     }
-    
-    ##--------------------
-    ## score vs. h
-    ##--------------------
-    if(score.vs.h){
-        plot(score ~ h, pars$hs.scores, xlab = "h's", ylab = "silouette", 
-             main = "selection with the best score")
-        abline(v = x$h, col = "red", lty = 2)
-    }
-    
-    ##--------------------
-    ## clustering results. first 2 PC if dim > 2.
-    ##--------------------
-    maintitle <- ifelse(attr(x$dat, "type") == "pc", "Clustering Result \nFirst two principal components", "Clustering Result")
-    myxlab <- ifelse(attr(x$dat, "type") == "pc", "PC 1", "x1")
-    myylab <- ifelse(attr(x$dat, "type") == "pc", "PC 2", "x2")
-    plot(x$dat, col = cols[x$cluster],
-         main = maintitle,
-         xlab = myxlab, ylab = myylab, pch = 1)
-    points(x$dat[x$centers,], col = cols, pch = 4, cex = 3)
-    ## legend("topright",
-    ##        legend = c(paste0("cluster", 1:nclust)),
-    ##        pch = 19,
-    ##        col = c(cols[(1:nclust - 1) %% length(cols) + 1]),
-    ##        cex = 0.6
-    ##    )
-    ## if(!is.null(file)) dev.off()
 }
 

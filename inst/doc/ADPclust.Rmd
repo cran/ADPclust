@@ -1,6 +1,6 @@
 ---
 title: "Fast Clustering Using Adaptive Density Peak Detection (ADPclust)"
-author: "Yifan \"Ethan\" Xu (ethan.yifanxu@gmail.com) and Xiao-Feng Wang"
+author: "Yifan (Ethan) Xu (ethan.yifanxu@gmail.com)\nXiao-Feng Wang (xfwang@gmail.com)"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{ADPclust-vignette}
@@ -52,29 +52,37 @@ library(ADPclust)
 ## Example 1: Automatic centroids selection in ADPclust
 
 ### Default settings
-The automatic centroids selection by ADPclust finds the best bandwidth $h$ and number of clusters $k$ from a grid of $(h,k)$ pairs. By default, the testing $h's$ are 10 values evenly spread in the interval $[1/3h_0, 3h_0]$, where $h_0$ is the Wand's asymptotic mean integrated squared error bandwidth (AMISE). The default testing cluster numbers are $k = 2,\ldots,10$. Here's a simple example:
+The automatic centroids selection by ADPclust finds the best bandwidth $h$ and number of clusters $k$ from a grid of $(h,k)$ pairs. By default, the testing $h's$ are 10 values evenly spread in the interval $[1/3h_0, 3h_0]$, where $h_0$ is the Wand's asymptotic mean integrated squared error bandwidth (AMISE). The default testing cluster numbers are $k = 2,\ldots,10$. Here is a simple example:
 
-```{r, fig.height=2.8, fig.width=7}
+```{r, fig.height=5, fig.width=9}
 # Load a simple simulated data set with 3 clusters.
 data(clust3)
 ans <- adpclust(clust3)
 # Above is equivalent to 
 # ans <- adpclust(clust3, centroids = "auto")
+plot(ans)
 ```
 
-The output of ADPclust `ans` is an object of class `adpclust` associated with `summary` and `plot` methods. `plot(ans)` produces a figure similar to the one shown above. `summary(ans)` gives a fitting summary:
+The output of ADPclust `ans` is an object of class `adpclust` associated with a `summary` and a `plot` method. `plot(ans)` produces a figure similar to the one shown above. `summary(ans)` gives a fitting summary:
 
 ```{r}
 summary(ans)
 ```
 
-### Changing the Bandwidth h
-We can change the reference bandwidth $h_0$ to Scott's rule-of-thumb (ROT) value by setting `htype = "ROT"`:
+### Input Distance Matrix Instead of Raw Data
+The input can be a distance matrix of class `dist` instead of the raw data frame. Note that if `centroid = "auto"` (default), then the dimension `p` must be provided to calculate `h`. 
+```{r, eval=FALSE}
+# A simple wrapper of dist() with normalization
+distm <- FindDistm(clust3, normalize = TRUE)
+ans.distm <- adpclust(distm = distm, p = 2)
+```
+
+### Change the Bandwidth h
+The reference bandwidth $h_0$ can be changed to Scott's rule-of-thumb (ROT) value by setting `htype = "ROT"`:
 
 ```{r, eval=FALSE}
 # Result is similar. Not shown.
 ans <- adpclust(clust3, htype = "ROT")
-
 ```
 
 Passing a specific value to the optional argument `h` specifies the bandwidth and suppresses `htype`. If a numeric vector is passed to `h` then every entry of it is tested to find the one given the best clustering result, according to average silhouette. Note `h` is a relative value so manually setting its value often requires trial and error.  
@@ -88,29 +96,31 @@ ans <- adpclust(clust3, h = c(10, 12, 18))
 ans <- adpclust(clust3, h = ROT(clust3))
 ```
 
-### Changing the number of clusters
+### Change the Number of Clusters to Test
 The number of (testing) cluster(s) can be set by the `nclust` argument. 
-```{r, fig.height=2.8, fig.width=7}
+```{r, fig.height=5, fig.width=5}
 # Setting different testing cluster numbers
 ans <- adpclust(clust3, nclust = 2:15)
 # Specifying one cluster number. 
-# Note in this case silouette vs. tested h values is shown instead of silouette vs. k
 ans <- adpclust(clust3, nclust = 3)
+plot(ans, to.plot = "fd")
 ```
 
-### Change outliers cutoff
+### Change f Cutoff in Auto Selection
 Another important argument is `f.cut`, denoting the cutoff value of $f's$ (red dotted line in the middle figure) for centroid/outlier discrimination. Points to the right of the line with high $delta's$ are potential cluster centroids. Points to the left of it with high $delta's$ are potential outliers. `f.cut` is the percentile value of $f$ with default value at 10%.
 
-```{r, fig.height=2.8, fig.width=7}
+```{r, fig.height=5, fig.width=9}
 # Load a data set with 10 clusters
 data(clust10)
-ans <- adpclust(clust10, f.cut = 0.1, nclust = 3:15, h = ROT(clust10))
+ans <- adpclust(clust10, f.cut = 0.1, nclust = 5:13, h = ROT(clust10))
+plot(ans)
 ```
 
 Setting `f.cut` to different values could result in different cluster assignment. In the following case `f.cut` is obviously set too high:
 
-```{r, fig.height=2.8, fig.width=7}
-ans <- adpclust(clust10, f.cut = 0.9, nclust = 3:15, h = ROT(clust10))
+```{r, fig.height=5, fig.width=9}
+ans <- adpclust(clust10, f.cut = 0.95, nclust = 5:13, h = ROT(clust10))
+plot(ans)
 ```
 
 ## Example 2: User interactive centroids selection in ADPclust

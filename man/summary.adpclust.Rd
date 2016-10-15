@@ -7,14 +7,11 @@
 \method{summary}{adpclust}(object, ...)
 }
 \arguments{
-\item{object}{object with class "adpclust", return of adpclust()}
+\item{object}{object of class "adpclust" that is returned from adpclust().}
 
-\item{...}{other arguments. NOT used in theis version.}
+\item{...}{other arguments. NOT used.}
 }
 \description{
-Summarizes results from adpclust function from the ADPclust package.
-}
-\author{
-Yifan Xu
+Summarizes the result from the adpclust() function.
 }
 

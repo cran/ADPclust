@@ -1,24 +1,23 @@
-##' Summarizes results from adpclust function from the ADPclust package.
+##' Summarizes the result from the adpclust() function.
 ##'
 ##' @title Summary of adpclust
-##' @param object object with class "adpclust", return of adpclust()
-##' @param ... other arguments. NOT used in theis version. 
+##' @param object object of class "adpclust" that is returned from adpclust().
+##' @param ... other arguments. NOT used. 
 ##' @return NULL
-##' @author Yifan Xu
 ##' @export
 
 summary.adpclust <- function(object, ...){
-    cat("-- ADPclust Procedure -- \n\n")
-    cat("Number of variables: \t", attr(object$dat, "p"), "\n")
-    cat("Number of obs.: \t", attr(object$dat, "n"), "\n")
-    cat("Centroids selection: \t", ifelse(object$testPars$centroids == "auto", "Automatic", "Manual"), "\n")
-    cat("Bandwith selection: \t", paste0(object$testPars$htype, " (", round(object$h,2), ")"),"\n")    
-    cat("Number of clusters: \t", length(object$centers), "\n")
-    cat("Avg. Silhouette: \t", object$score, "\n")
+    cat("-- ADPclust Result -- \n\n")
+    cat("Number of obs.: \t", length(object[['clusters']]), "\n")
+    cat("Centroids selection: \t", object[['selection.type']], "\n")
+    cat("Number of clusters: \t", length(object[['centers']]), "\n")
+    cat("Avg. Silhouette: \t", object[['silhouette']], "\n")
+    cat("Elements in result: \t", paste0(names(object)), sep = " $")
     cat("\nf(x): \n")
-    print(summary(object$f))
+    print(summary(object[['f']]))
     cat("\ndelta(x): \n")
-    print(summary(object$delta))
+    print(summary(object[['delta']]))
+
     invisible(NULL)
 }
 
